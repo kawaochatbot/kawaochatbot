@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบกาเหว่า - เข้าสู่ระบบ</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+        .font-prompt { font-family: 'Prompt', sans-serif; }
+        .tab-active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+        .role-active { background-color: #ebf8ff; border-color: #bee3f8; color: #2b6cb0; }
+    </style>
+</head>
+<body class="bg-slate-900 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden p-6 relative">
+        <div class="text-center my-4">
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-blue-500/30 mb-3">
+                <i class="fa-solid fa-dove text-white text-3xl"></i>
+            </div>
+            <h1 class="text-xl font-bold text-slate-800 font-prompt">ระบบกาเหว่า (Kawaow)</h1>
+            <p class="text-xs text-slate-400 mt-1">ระบบบริหารจัดการงานค้างอัจฉริยะ</p>
+        </div>
+
+        <div class="flex border-b border-slate-100 text-center text-sm font-medium text-slate-400 mb-5 font-prompt">
+            <button id="tabLogin" onclick="switchMode('login')" class="flex-1 py-3 border-b-2 tab-active transition-all cursor-pointer">เข้าสู่ระบบ</button>
+            <button id="tabRegister" onclick="switchMode('register')" class="flex-1 py-3 border-b-2 border-transparent transition-all cursor-pointer">สมัครสมาชิกใหม่</button>
+        </div>
+
+        <div class="flex gap-3 mb-5 font-prompt">
+            <button id="roleTeacher" onclick="switchRole('teacher')" class="flex-1 py-2.5 px-4 rounded-xl border text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 role-active shadow-sm cursor-pointer">
+                <i class="fa-solid fa-chalkboard-user"></i> คุณครู
+            </button>
+            <button id="roleStudent" onclick="switchRole('student')" class="flex-1 py-2.5 px-4 rounded-xl border text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-slate-400 border-slate-100 hover:bg-slate-50 cursor-pointer">
+                <i class="fa-solid fa-user-graduate"></i> นักเรียน
+            </button>
+        </div>
+
+        <div id="dynamicForm" class="space-y-4 min-h-[80px]"></div>
+        <div id="msgBox" class="hidden text-xs text-center p-3 rounded-xl mt-4 border font-semibold transition-all"></div>
+
+        <button id="btnSubmit" onclick="handleSubmit()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-prompt font-semibold py-3 px-4 rounded-xl mt-6 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
+            <i id="loader" class="fa-solid fa-circle-notch fa-spin hidden text-sm"></i>
+            <span id="btnText">เข้าสู่ระบบ</span>
+        </button>
+    </div>
+
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    
+    <script>
+        // ==========================================
+        // ⚙️ ตั้งค่าสำคัญชุดที่ 1
+        // ==========================================
+        const LIFF_ID = "2010513643-vqhOnSoz"; 
+        const WEB_APP_URL = "นำURLเว็บแอปจากGoogleAppsScriptมาวางตรงนี้"; 
+
+        let currentMode = 'login'; 
+        let currentRole = 'teacher'; 
+        let liffProfile = null; 
+
+        const formTemplates = {
+            login: {
+                teacher: [{ id: 'uid', label: 'รหัสประจำตัวครู', icon: 'fa-solid fa-id-card', placeholder: 'เช่น T111' }],
+                student: [{ id: 'uid', label: 'รหัสประจำตัวนักเรียน', icon: 'fa-solid fa-user-graduate', placeholder: 'เช่น S64001' }]
+            },
+            register: {
+                teacher: [
+                    { id: 'uid', label: 'รหัสประจำตัวครู (ที่ต้องการใช้)', icon: 'fa-solid fa-id-card', placeholder: 'เช่น T111' },
+                    { id: 'uname', label: 'ชื่อ-นามสกุลจริง', icon: 'fa-solid fa-user', placeholder: 'เช่น สมชาย ใจดี' },
+                    { id: 'uline', label: 'LINE User ID', icon: 'fa-brands fa-line' },
+                    { id: 'subCode', label: 'รหัสวิชาที่สอน (คั่นด้วย ,)', icon: 'fa-solid fa-book-bookmark', placeholder: 'เช่น ค31101, ค31102' },
+                    { id: 'subName', label: 'ชื่อรายวิชา (คั่นด้วย ,)', icon: 'fa-solid fa-book', placeholder: 'เช่น คณิตศาสตร์1, คณิตศาสตร์2' },
+                    { id: 'classes', label: 'ห้องเรียนที่รับผิดชอบ (คั่นด้วย ,)', icon: 'fa-solid fa-school', placeholder: 'เช่น ม.4/1, ม.4/2' }
+                ],
+                student: [
+                    { id: 'uid', label: 'รหัสประจำตัวนักเรียน', icon: 'fa-solid fa-id-card', placeholder: 'เช่น S64001' },
+                    { id: 'uname', label: 'ชื่อ-นามสกุลจริง', icon: 'fa-solid fa-user', placeholder: 'เช่น สมหญิง รักเรียน' },
+                    { id: 'uline', label: 'LINE User ID', icon: 'fa-brands fa-line' },
+                    { id: 'uClass', label: 'ห้องเรียน', icon: 'fa-solid fa-school', placeholder: 'เช่น ม.4/1' }
+                ]
+            }
+        };
+
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (liff.isLoggedIn()) {
+                    liffProfile = await liff.getProfile();
+                    if (currentMode === 'register') { renderForm(); }
+                } else {
+                    if (liff.isInClient()) { liff.login(); }
+                }
+            } catch (err) {
+                console.error("LIFF Init Error:", err);
+            }
+        }
+
+        function renderForm() {
+            const container = document.getElementById('dynamicForm');
+            if(!container) return;
+            container.innerHTML = '';
+            hideMsg();
+            
+            if (currentMode === 'register' && !liffProfile) {
+                container.innerHTML = `
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center my-2">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 text-2xl mb-2"></i>
+                        <h3 class="text-xs font-bold text-amber-800 font-prompt">ไม่สามารถสมัครสมาชิกจากเบราว์เซอร์นี้ได้</h3>
+                        <p class="text-[11px] text-amber-600 mt-1 leading-relaxed">เพื่อระบบดึงไอดีอัตโนมัติ โปรดเปิดลิงก์สมัครสมาชิกนี้ผ่านแอป LINE ในมือถือของคุณเท่านั้นครับ</p>
+                    </div>`;
+                document.getElementById('btnSubmit').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('btnSubmit').style.display = 'flex';
+
+            formTemplates[currentMode][currentRole].forEach(field => {
+                let html = '';
+                if (field.id === 'uline' && liffProfile) {
+                    html = `
+                        <div class="space-y-1">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">บัญชี LINE ที่ผูกให้อัตโนมัติ</label>
+                            <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-2.5 flex items-center gap-2.5 shadow-inner">
+                                <img src="${liffProfile.pictureUrl || 'https://img.icons8.com/officel/80/user.png'}" class="w-9 h-9 rounded-full border-2 border-emerald-400 object-cover" />
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[10px] font-bold text-emerald-600 flex items-center gap-1"><i class="fa-brands fa-line"></i> ตรวจสอบตัวตนสำเร็จ (ล็อกค่า)</p>
+                                    <p class="text-xs font-semibold text-slate-700 truncate">${liffProfile.displayName}</p>
+                                    <input type="hidden" id="uline" value="${liffProfile.userId}" />
+                                </div>
+                            </div>
+                        </div>`;
+                } else {
+                    html = `
+                        <div class="space-y-1">
+                            <label class="block text-[11px] font-bold text-slate-500 tracking-wide">${field.label}</label>
+                            <div class="relative">
+                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"><i class="${field.icon}"></i></span>
+                                <input type="text" id="${field.id}" placeholder="${field.placeholder || ''}" class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-xs" />
+                            </div>
+                        </div>`;
+                }
+                container.insertAdjacentHTML('beforeend', html);
+            });
+            document.getElementById('btnText').innerText = currentMode === 'login' ? 'เข้าสู่ระบบ' : 'ลงทะเบียนใช้งาน';
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('tabLogin').className = `flex-1 py-3 border-b-2 border-transparent transition-all cursor-pointer ${mode === 'login' ? 'tab-active' : ''}`;
+            document.getElementById('tabRegister').className = `flex-1 py-3 border-b-2 border-transparent transition-all cursor-pointer ${mode === 'register' ? 'tab-active' : ''}`;
+            renderForm();
+        }
+
+        function switchRole(role) {
+            currentRole = role;
+            document.getElementById('roleTeacher').className = `flex-1 py-2.5 px-4 rounded-xl border text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${role === 'teacher' ? 'role-active shadow-sm' : 'text-slate-400 border-slate-100 hover:bg-slate-50'}`;
+            document.getElementById('roleStudent').className = `flex-1 py-2.5 px-4 rounded-xl border text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${role === 'student' ? 'role-active shadow-sm' : 'text-slate-400 border-slate-100 hover:bg-slate-50'}`;
+            renderForm();
+        }
+
+        function showMsg(textColor, bgColor, borderColor, text) {
+            const box = document.getElementById('msgBox');
+            if(!box) return;
+            box.className = `text-xs text-center p-3 rounded-xl mt-4 border font-semibold transition-all ${textColor} ${bgColor} ${borderColor}`;
+            box.innerText = text;
+            box.classList.remove('hidden');
+        }
+
+        function hideMsg() { const box = document.getElementById('msgBox'); if(box) box.classList.add('hidden'); }
+        
+        function setLoading(isLoading) {
+            const btn = document.getElementById('btnSubmit');
+            const loader = document.getElementById('loader');
+            if(!btn || !loader) return;
+            btn.disabled = isLoading;
+            btn.style.opacity = isLoading ? '0.6' : '1';
+            if(isLoading) loader.classList.remove('hidden'); else loader.classList.add('hidden');
+        }
+
+        // 🔥 จุดอัปเกรดสำคัญ: เปลี่ยนจาก google.script.run เป็นการยิง Fetch ข้ามค่ายไปหา Google Sheet
+        function handleSubmit() {
+            hideMsg();
+            const uid = document.getElementById('uid')?.value?.trim();
+            if(!uid) return showMsg('text-red-500', 'bg-red-50', 'border-red-100', 'กรุณากรอกรหัสประจำตัว');
+            setLoading(true);
+
+            // เตรียมกล่องข้อมูลส่งไปหลังบ้าน
+            const payload = {
+                action: currentMode === 'login' ? 'login' : (currentRole === 'teacher' ? 'registerTeacher' : 'registerStudent'),
+                role: currentRole,
+                uid: uid,
+                uname: document.getElementById('uname')?.value?.trim() || "",
+                uline: document.getElementById('uline')?.value?.trim() || "",
+                subCode: document.getElementById('subCode')?.value?.trim() || "",
+                subName: document.getElementById('subName')?.value?.trim() || "",
+                classes: document.getElementById('classes')?.value?.trim() || "",
+                uClass: document.getElementById('uClass')?.value?.trim() || ""
+            };
+
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    if (currentMode === 'login') {
+                        showMsg('text-green-600', 'bg-green-50', 'border-green-100', "🎉 เข้าสู่ระบบสำเร็จ! กำลังนำคุณไปหน้าจัดการข้อมูล...");
+                        // นำทางไปหน้า Dashboard ตัวเต็มบนสคริปต์กูเกิล
+                        setTimeout(() => {
+                            window.open(WEB_APP_URL + (res.role === 'teacher' ? `?view=teacher&tid=${res.userData.teacher_id}` : `?view=student&sid=${res.userData.student_id}`), "_top");
+                        }, 1000);
+                    } else {
+                        showMsg('text-green-600', 'bg-green-50', 'border-green-100', res.message);
+                        setTimeout(() => switchMode('login'), 2000);
+                        setLoading(false);
+                    }
+                } else {
+                    showMsg('text-red-500', 'bg-red-50', 'border-red-100', res.message);
+                    setLoading(false);
+                }
+            })
+            .catch(err => {
+                showMsg('text-red-500', 'bg-red-50', 'border-red-100', 'การเชื่อมต่อฐานข้อมูลขัดข้อง: ' + err.message);
+                setLoading(false);
+            });
+        }
+
+        window.onload = function() {
+            renderForm();
+            initializeLiff();
+        };
+    </script>
+</body>
+</html>
