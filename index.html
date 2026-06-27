@@ -55,7 +55,7 @@
     
     <script>
         // ==========================================
-        // ⚙️ ตั้งค่าสำคัญชุดที่ 1
+        // ⚙️ ตั้งค่าสำคัญ
         // ==========================================
         const LIFF_ID = "2010513643-vqhOnSoz"; 
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz46COBKPHhDpMWBY-5Bpxa-Rs6PHwtXHQaY52SSNG7Exs4ob2XynTsrKUS8IAcjmzC/exec"; 
@@ -92,7 +92,7 @@
                 await liff.init({ liffId: LIFF_ID });
                 if (liff.isLoggedIn()) {
                     liffProfile = await liff.getProfile();
-                    if (currentMode === 'register') { renderForm(); }
+                    renderForm(); 
                 } else {
                     if (liff.isInClient()) { liff.login(); }
                 }
@@ -183,14 +183,12 @@
             if(isLoading) loader.classList.remove('hidden'); else loader.classList.add('hidden');
         }
 
-       // 🔥 อัปเดตฟังก์ชันเพื่อแก้ปัญหาปุ่มหมุนค้าง
         function handleSubmit() {
             hideMsg();
             const uid = document.getElementById('uid')?.value?.trim();
             if(!uid) return showMsg('text-red-500', 'bg-red-50', 'border-red-100', 'กรุณากรอกรหัสประจำตัว');
             setLoading(true);
 
-            // เตรียมกล่องข้อมูลส่งไปหลังบ้าน
             const payload = {
                 action: currentMode === 'login' ? 'login' : (currentRole === 'teacher' ? 'registerTeacher' : 'registerStudent'),
                 role: currentRole,
@@ -209,7 +207,7 @@
             })
             .then(res => res.json())
             .then(res => {
-                setLoading(false); // 🟢 สั่งปิดปุ่มหมุนทันทีเมื่อได้รับคำตอบจากระบบ
+                setLoading(false);
 
                 if (res.success) {
                     if (currentMode === 'login') {
@@ -226,24 +224,14 @@
                 }
             })
             .catch(err => {
-                setLoading(false); // 🟢 สั่งปิดปุ่มหมุนด้วยกรณีที่อินเทอร์เน็ตหลุดหรือมี Error
-                showMsg('text-red-500', 'bg-red-50', 'border-red-100', 'การเชื่อมต่อฐานข้อมูลขัดข้อง: ' + err.message);
-            });
-        }
-        })
-            .catch(err => {
-                setLoading(false); // 🟢 สั่งปิดปุ่มหมุนด้วยกรณีที่อินเทอร์เน็ตหลุดหรือมี Error
+                setLoading(false);
                 showMsg('text-red-500', 'bg-red-50', 'border-red-100', 'การเชื่อมต่อฐานข้อมูลขัดข้อง: ' + err.message);
             });
         }
 
-        // 🌟 เติม 2 บรรทัดนี้กลับเข้าไปที่ท้ายโค้ด เพื่อให้ระบบเริ่มทำงานตอนโหลดหน้าเว็บ
+        // เริ่มต้นระบบทันทีที่โหลดหน้าเว็บ
         initializeLiff();
         renderForm();
-
-    </script>
-</body>
-</html>
     </script>
 </body>
 </html>
