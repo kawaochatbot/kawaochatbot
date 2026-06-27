@@ -230,6 +230,20 @@
                 showMsg('text-red-500', 'bg-red-50', 'border-red-100', 'การเชื่อมต่อฐานข้อมูลขัดข้อง: ' + err.message);
             });
         }
+        })
+            .catch(err => {
+                setLoading(false); // 🟢 สั่งปิดปุ่มหมุนด้วยกรณีที่อินเทอร์เน็ตหลุดหรือมี Error
+                showMsg('text-red-500', 'bg-red-50', 'border-red-100', 'การเชื่อมต่อฐานข้อมูลขัดข้อง: ' + err.message);
+            });
+        }
+
+        // 🌟 เติม 2 บรรทัดนี้กลับเข้าไปที่ท้ายโค้ด เพื่อให้ระบบเริ่มทำงานตอนโหลดหน้าเว็บ
+        initializeLiff();
+        renderForm();
+
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
