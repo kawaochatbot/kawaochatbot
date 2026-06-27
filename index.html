@@ -183,7 +183,7 @@
             if(isLoading) loader.classList.remove('hidden'); else loader.classList.add('hidden');
         }
 
-        // 🔥 จุดอัปเกรดสำคัญ: เปลี่ยนจาก google.script.run เป็นการยิง Fetch ข้ามค่ายไปหา Google Sheet
+       // 🔥 อัปเดตฟังก์ชันเพื่อแก้ปัญหาปุ่มหมุนค้าง
         function handleSubmit() {
             hideMsg();
             const uid = document.getElementById('uid')?.value?.trim();
@@ -209,33 +209,27 @@
             })
             .then(res => res.json())
             .then(res => {
+                setLoading(false); // 🟢 สั่งปิดปุ่มหมุนทันทีเมื่อได้รับคำตอบจากระบบ
+
                 if (res.success) {
                     if (currentMode === 'login') {
                         showMsg('text-green-600', 'bg-green-50', 'border-green-100', "🎉 เข้าสู่ระบบสำเร็จ! กำลังนำคุณไปหน้าจัดการข้อมูล...");
-                        // นำทางไปหน้า Dashboard ตัวเต็มบนสคริปต์กูเกิล
                         setTimeout(() => {
                             window.open(WEB_APP_URL + (res.role === 'teacher' ? `?view=teacher&tid=${res.userData.teacher_id}` : `?view=student&sid=${res.userData.student_id}`), "_top");
                         }, 1000);
                     } else {
                         showMsg('text-green-600', 'bg-green-50', 'border-green-100', res.message);
                         setTimeout(() => switchMode('login'), 2000);
-                        setLoading(false);
                     }
                 } else {
                     showMsg('text-red-500', 'bg-red-50', 'border-red-100', res.message);
-                    setLoading(false);
                 }
             })
             .catch(err => {
+                setLoading(false); // 🟢 สั่งปิดปุ่มหมุนด้วยกรณีที่อินเทอร์เน็ตหลุดหรือมี Error
                 showMsg('text-red-500', 'bg-red-50', 'border-red-100', 'การเชื่อมต่อฐานข้อมูลขัดข้อง: ' + err.message);
-                setLoading(false);
             });
         }
-
-        window.onload = function() {
-            renderForm();
-            initializeLiff();
-        };
     </script>
 </body>
 </html>
