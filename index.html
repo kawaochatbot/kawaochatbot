@@ -46,7 +46,7 @@
         <div id="msgBox" class="hidden text-xs text-center p-3 rounded-xl mt-4 border font-semibold transition-all"></div>
 
         <button id="btnSubmit" onclick="handleSubmit()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-prompt font-semibold py-3 px-4 rounded-xl mt-6 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
-            <i id="loader" class="fa-solid fa-circle-notch fa-spin hidden text-sm"></i>
+            <i id="loader" class="fa-solid fa-circle-notch fa-spin text-sm" style="display: none;"></i>
             <span id="btnText">เข้าสู่ระบบ</span>
         </button>
     </div>
@@ -54,9 +54,6 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     
     <script>
-        // ==========================================
-        // ⚙️ ตั้งค่าสำคัญ
-        // ==========================================
         const LIFF_ID = "2010513643-vqhOnSoz"; 
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz46COBKPHhDpMWBY-5Bpxa-Rs6PHwtXHQaY52SSNG7Exs4ob2XynTsrKUS8IAcjmzC/exec"; 
 
@@ -174,13 +171,14 @@
 
         function hideMsg() { const box = document.getElementById('msgBox'); if(box) box.classList.add('hidden'); }
         
+        // 🌟 ปรับตรงนี้: เปลี่ยนการควบคุม Loader มาใช้ .style.display แทนคลาส เพื่อไม่ให้ตีกับ Tailwind
         function setLoading(isLoading) {
             const btn = document.getElementById('btnSubmit');
             const loader = document.getElementById('loader');
             if(!btn || !loader) return;
             btn.disabled = isLoading;
             btn.style.opacity = isLoading ? '0.6' : '1';
-            if(isLoading) loader.classList.remove('hidden'); else loader.classList.add('hidden');
+            loader.style.display = isLoading ? 'inline-block' : 'none';
         }
 
         function handleSubmit() {
@@ -229,7 +227,6 @@
             });
         }
 
-        // เริ่มต้นระบบทันทีที่โหลดหน้าเว็บ
         initializeLiff();
         renderForm();
     </script>
