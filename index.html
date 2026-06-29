@@ -55,7 +55,7 @@
     
     <script>
         const LIFF_ID = "2010513643-vqhOnSoz"; 
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz46COBKPHhDpMWBY-5Bpxa-Rs6PHwtXHQaY52SSNG7Exs4ob2XynTsrKUS8IAcjmzC/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwEFOAxGkfPj2V5bu69O6xMAmRrvz89DRMuwTFXgPjBhM4dQ7CEbz0hpBed-8QVgP9r/exec"; 
 
         let currentMode = 'login'; 
         let currentRole = 'teacher'; 
@@ -169,9 +169,11 @@
             box.classList.remove('hidden');
         }
 
-        function hideMsg() { const box = document.getElementById('msgBox'); if(box) box.classList.add('hidden'); }
+        function hideMsg() { 
+            const box = document.getElementById('msgBox'); 
+            if(box) box.classList.add('hidden'); 
+        }
         
-        // 🌟 ปรับตรงนี้: เปลี่ยนการควบคุม Loader มาใช้ .style.display แทนคลาส เพื่อไม่ให้ตีกับ Tailwind
         function setLoading(isLoading) {
             const btn = document.getElementById('btnSubmit');
             const loader = document.getElementById('loader');
@@ -231,4 +233,4 @@
         renderForm();
     </script>
 </body>
-</html>
+</html>    
